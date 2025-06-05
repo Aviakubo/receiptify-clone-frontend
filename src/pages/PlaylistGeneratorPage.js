@@ -175,6 +175,7 @@ const PlaylistGeneratorPage = () => {
   const [playlistCreated, setPlaylistCreated] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [error, setError] = useState(null);
+  const [timeRange, setTimeRange] = useState('medium_term');
 
   useEffect(() => {
     // Reset error message when mood changes
@@ -197,7 +198,11 @@ const PlaylistGeneratorPage = () => {
       const response = await llmService.generateMoodPlaylist(auth.accessToken, mood);
       setRecommendations(response.data.recommendations);
       setAvailableTracks(response.data.available_tracks);
-      setSelectedTracks(response.data.available_tracks.slice(0, 5)); // Pre-select top 5 tracks
+      const selectRandomTracks = (tracks, count) => {
+        const shuffled = [...tracks].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+      };
+      setSelectedTracks(selectRandomTracks(response.data.available_tracks, 5));
       setLoading(false);
     } catch (error) {
       console.error('Error generating playlist:', error);
@@ -338,6 +343,26 @@ const PlaylistGeneratorPage = () => {
               onChange={(e) => setMood(e.target.value)}
               required
             />
+            <div style={{ marginBottom: '1.5rem '}}>
+              <Label htmlFor="timeRange">Time period to analyze:</Label>
+              <select
+                id="timeRange"
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: '#3E3E3E',
+                  color: 'white'
+                }}
+                >
+                <option value="short_term">Recent (4 weeks)</option>
+                <option value="medium_term">Last 6 Months</option>
+                <option value="long_term">All Time</option>
+                </select>
+            </div>
             <Button type="submit" disabled={loading || !mood}>
               {loading ? 'Generating...' : 'Generate Playlist'}
             </Button>
